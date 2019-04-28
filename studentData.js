@@ -1,21 +1,22 @@
 const rp = require('request-promise');
 const cheerio = require('cheerio')
 const axios = require('axios');
+let students = {}
 
 const headers = {
     "Connection": "keep-alive",
     "Content-Type": "application/x-www-form-urlencoded",
     
-    "Cookie": "ASP.NET_SessionId=whhidgc2wiucq4wxfavoi3fr",
+    "Cache-Control": "no-cache, no-store",
+    
 }
 
 const header2 = {
     "Connection": "keep-alive",
     
     "Content-Type": "application/x-www-form-urlencoded",
-    "Cache-Control": "max-age = 0",
+    "Cache-Control": "no-cache, no-store",
     "Upgrade-Insecure-Requests": "5",
-    "Cookie": "ASP.NET_SessionId=whhidgc2wiucq4wxfavoi3fr",
 }
 
 const body = {
@@ -28,8 +29,8 @@ const body = {
     "txt_pwd": "",
     "txt_username_o": "",
     "txt_pwd_o": "",
-    "StuUID": "714-17-514",
-    "StuPwd": "9901",
+    "StuUID": "714-17-622",
+    "StuPwd": "10013",
     "btnStuLogin": "Login"
 }
 
@@ -48,7 +49,7 @@ rp({
         body["__VIEWSTATEGENERATOR"] = viewStateGenerator;
         body["__VIEWSTATE"] = viewState;
 
-        console.log(body)
+        // console.log(body)
         rp({
             method: "post",
             uri: "https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx",
@@ -56,11 +57,22 @@ rp({
             form: body
             
         })
-            .then(d => {
-                // axios.get("https://exam.pupadmissions.ac.in/Examination_Form/paper.aspx", header2)
-                // .then(e => console.log(e.data))
-
-                console.log(d)
-                // rp("https://exam.pupadmissions.ac.in/Examination_Form/paper.aspx").then(e=>console.log(e))
+            .then((...d) => {
+                console.log(d);
+                extractData(d);
             })
     }).catch(err=> console.log(err))
+
+function extractData(data) {
+    // console.log(data)
+    
+    let $ = cheerio.load(data);
+    let rollno = $("#lblRollNo").text();
+    
+    students[rollno] =  {
+            image: $("#Image1").prop("src"),
+            name: $("#lblApp_Name").text(),
+            registration: $("#lblRegNo").text() 
+    }
+    console.log(students)
+}
