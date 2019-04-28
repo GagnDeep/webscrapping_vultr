@@ -1,25 +1,25 @@
+const rp = require('request-promise');
 const cheerio = require('cheerio')
 const axios = require('axios');
 
 const headers = {
     "Connection": "keep-alive",
     "Content-Type": "application/x-www-form-urlencoded",
+    
+    "Cookie": "ASP.NET_SessionId=whhidgc2wiucq4wxfavoi3fr",
 }
 
 const header2 = {
     "Connection": "keep-alive",
+    
+    "Content-Type": "application/x-www-form-urlencoded",
     "Cache-Control": "max-age = 0",
-    "Upgrade-Insecure-Requests": "1",
-    "User-Agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Mobile Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
-    "Referer": "https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Cookie": "ASP.NET_SessionId=xjbvos4s1jredlbqfu20deav",
+    "Upgrade-Insecure-Requests": "5",
+    "Cookie": "ASP.NET_SessionId=whhidgc2wiucq4wxfavoi3fr",
 }
 
 const body = {
-    "__EVENTTARGET": "",
+    "__EVENTTARGET": "student",
     "__EVENTARGUMENT": "",
     "__VIEWSTATE": "",
     "__VIEWSTATEGENERATOR": "",
@@ -28,14 +28,18 @@ const body = {
     "txt_pwd": "",
     "txt_username_o": "",
     "txt_pwd_o": "",
-    "StuUID": "714-17-622",
-    "StuPwd": "10013",
+    "StuUID": "714-17-514",
+    "StuPwd": "9901",
     "btnStuLogin": "Login"
 }
 
-axios.get("https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx")
+rp({
+    method: "get",
+    uri: "https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx",
+    headers: header2
+    })
     .then(res => {
-        let $ = cheerio.load(res.data);
+        let $ = cheerio.load(res);
         let eventValidation = $("input#__EVENTVALIDATION").prop("value"),
             viewStateGenerator = $("input#__VIEWSTATEGENERATOR").prop("value"),
             viewState = $("input#__VIEWSTATE").prop("value");
@@ -45,11 +49,18 @@ axios.get("https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx")
         body["__VIEWSTATE"] = viewState;
 
         console.log(body)
-        axios.post("https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx", body, headers)
+        rp({
+            method: "post",
+            uri: "https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx",
+            headers: headers,
+            form: body
+            
+        })
             .then(d => {
-                axios.get("https://exam.pupadmissions.ac.in/Examination_Form/paper.aspx", header2)
-                .then(e => console.log(e.data))
+                // axios.get("https://exam.pupadmissions.ac.in/Examination_Form/paper.aspx", header2)
+                // .then(e => console.log(e.data))
 
-                // console.log(Object.keys(d), d.config)
+                console.log(d)
+                // rp("https://exam.pupadmissions.ac.in/Examination_Form/paper.aspx").then(e=>console.log(e))
             })
-    })
+    }).catch(err=> console.log(err))
