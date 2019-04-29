@@ -1,25 +1,36 @@
 const rp = require('request-promise');
 const cheerio = require('cheerio')
 const axios = require('axios');
+var tough = require('tough-cookie');
 let students = {}
 
+var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+
+
 const headers = {
-    "Connection": "keep-alive",
+
+    "Host": "exam.pupadmissions.ac.in",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Referer": "https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx",
     "Content-Type": "application/x-www-form-urlencoded",
-    
-    "Cache-Control": "no-cache, no-store",
-    
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Cache-Control": "no-cache, no-store"
 }
 
 const header2 = {
+    "Host": "exam.pupadmissions.ac.in",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:67.0) Gecko/20100101 Firefox/67.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    // "Accept-Language": "en-US,en;q=0.5",
+    // "Accept-Encoding": "gzip, deflate, br",
     "Connection": "keep-alive",
-    
-    "Content-Type": "application/x-www-form-urlencoded",
-    "Cache-Control": "no-cache, no-store",
-    "Upgrade-Insecure-Requests": "5",
+    "Upgrade-Insecure-Requests": "1",
 }
 
-const body = {
+let body = {
     "__EVENTTARGET": "student",
     "__EVENTARGUMENT": "",
     "__VIEWSTATE": "",
@@ -29,15 +40,58 @@ const body = {
     "txt_pwd": "",
     "txt_username_o": "",
     "txt_pwd_o": "",
-    "StuUID": "714-17-622",
-    "StuPwd": "10013",
+    "StuUID": "714-17-514",
+    "StuPwd": "9901",
     "btnStuLogin": "Login"
 }
 
+let header3 = {
+    "Cache-Control": "max-age=1500",
+    "Host": "exam.pupadmissions.ac.in",
+    // "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:67.0) Gecko/20100101 Firefox/67.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    // "Accept-Language": "en-US,en;q=0.5",
+    // "Accept-Encoding": "gzip, deflate, br",
+    "Referer": "https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+}
+
+// const headers = {
+//     "Connection": "keep-alive",
+//     "Content-Type": "application/x-www-form-urlencoded",
+
+//     "Cache-Control": "no-cache, no-store",
+
+// }
+
+// const header2 = {
+//     "Connection": "keep-alive",
+
+//     "Content-Type": "application/x-www-form-urlencoded",
+//     "Cache-Control": "no-cache, no-store",
+//     "Upgrade-Insecure-Requests": "5",
+// }
+
+// const body = {
+//     "__EVENTTARGET": "student",
+//     "__EVENTARGUMENT": "",
+//     "__VIEWSTATE": "",
+//     "__VIEWSTATEGENERATOR": "",
+//     "EVENTVALIDATION": "",
+//     "txt_userid": "",
+//     "txt_pwd": "",
+//     "txt_username_o": "",
+//     "txt_pwd_o": "",
+//     "StuUID": "714-17-622",
+//     "StuPwd": "10013",
+//     "btnStuLogin": "Login"
+// }
+
 rp({
-    method: "get",
-    uri: "https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx",
-    headers: header2
+        method: "get",
+        uri: "https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx",
+        headers: header2
     })
     .then(res => {
         let $ = cheerio.load(res);
@@ -49,30 +103,72 @@ rp({
         body["__VIEWSTATEGENERATOR"] = viewStateGenerator;
         body["__VIEWSTATE"] = viewState;
 
+
+        // console.log(body=toUrlEncoded(body))
         // console.log(body)
         rp({
-            method: "post",
-            uri: "https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx",
-            headers: headers,
-            form: body
-            
-        })
-            .then((...d) => {
-                console.log(d);
-                extractData(d);
+                method: "POST",
+                uri: "https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx",
+                headers: headers,
+                form: body,
+                resolveWithFullResponse: true,
             })
-    }).catch(err=> console.log(err))
+            .then(d => {
+                console.log(d.statusCode);
+                // extractData(d);
+            })
+            .catch(err => {
+                let headers2 = err.response.headers;
+
+                let Cookie = headers2['set-cookie'][0].split(';')[0];
+                header3['Cookie'] = Cookie
+                // console.log(Cookie)
+                // let cookie = new tough.Cookie({
+                //     key: "ASP.NET_SessionId",
+                //     value: Cookie[0].split('=')[1],
+                //     domain: 'exam.pupadmissions.ac.in',
+                //     httpOnly: true,
+                //     path: '/',
+                //     maxAge: 31536000
+                // });
+                // var cookiejar = rp.jar();
+                // cookiejar._jar.rejectPublicSuffixes = false;
+                // cookiejar.setCookie(cookie.toString(), 'https://exam.pupadmissions.ac.in/Examination_Form/paper.aspx');
+                rp({
+                        uri: "https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx",
+                        headers: header3,
+                        method: "post",
+                        form: body
+                    })
+                    .then(res => extractData(res))
+            })
+
+        // var xhttp = new XMLHttpRequest();
+        //     xhttp.onreadystatechange = function() {
+        //         console.log(this.status)
+        //         if (this.readyState == 4 && this.status == 200) {
+        //             // Typical action to be performed when the document is ready:
+        //             // document.getElementById("demo").innerHTML = xhttp.responseText;
+        //         }
+        //     };
+        //     xhttp.open("POST", "https://exam.pupadmissions.ac.in/Examination_Form/LoginCollege.aspx");
+
+        //     Object.keys(headers).forEach(e => xhttp.setRequestHeader(e, JSON.stringify(headers[e])))
+        //     xhttp.send(JSON.stringify(body));
+    }).catch(err => console.log(err))
 
 function extractData(data) {
     // console.log(data)
-    
+
     let $ = cheerio.load(data);
     let rollno = $("#lblRollNo").text();
-    
-    students[rollno] =  {
-            image: $("#Image1").prop("src"),
-            name: $("#lblApp_Name").text(),
-            registration: $("#lblRegNo").text() 
+
+    students[rollno] = {
+        image: $("#Image1").prop("src"),
+        name: $("#lblApp_Name").text(),
+        registration: $("#lblRegNo").text()
     }
     console.log(students)
 }
+
+const toUrlEncoded = obj => Object.keys(obj).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(obj[k])).join('&');
